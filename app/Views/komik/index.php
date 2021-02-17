@@ -23,7 +23,7 @@
       <td><img src="/img/<?= $k["sampul"] ?>" class="sampul" alt=""></td>
       <td><?= $k["judul"] ?></td>
       <td>
-       <a href="" class="btn btn-success">Detail</a>
+       <a href="/komik/<?= $k["slug"] ?>" class="btn btn-success">Detail</a>
       </td>
      </tr>
      <?php endforeach; ?>
@@ -32,5 +32,4 @@
   </div>
  </div>
 </div>
-<?= $this->endSection()
-?>
+<?= $this->endSection() ?>
