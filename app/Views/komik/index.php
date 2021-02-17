@@ -5,7 +5,13 @@
 <div class="container">
  <div class="row">
   <div class="col">
+   <a href="/komik/create" class="btn btn-primary mt-3">Tambah Data Komik</a>
    <h1 class="mt-2">Daftar Komik</h1>
+   <?php if (session()->getFlashData("pesan")): ?>
+   <div class="alert alert-success" role="alert">
+    <?= session()->getFlashData("pesan") ?>
+   </div>
+   <?php endif; ?>
    <table class="table">
     <thead>
      <tr>
@@ -32,4 +38,5 @@
   </div>
  </div>
 </div>
-<?= $this->endSection() ?>
+<?= $this->endSection()
+?>
