@@ -85,4 +85,64 @@ class Komik extends BaseController
 
     return redirect()->to("/komik");
   }
+
+  public function delete($id)
+  {
+    $this->komikModel->delete($id);
+    session()->setFlashData("pesan", "Data Berhasil Dihapus.");
+    return redirect()->to("/komik");
+  }
+
+  public function edit($slug)
+  {
+    $data = [
+      "title" => "Form Edit Data Komik",
+      "validation" => \Config\Services::validation(),
+      "komik" => $this->komikModel->getKomik($slug),
+    ];
+    return view("komik/edit", $data);
+  }
+
+  public function update($id)
+  {
+    // cek judul
+    $komikLama = $this->komikModel->getKomik($this->request->getVar("slug"));
+    if ($komikLama["judul"] == $this->request->getVar("judul")) {
+      $rules_judul = "required";
+    } else {
+      $rules_judul = "required|is_unique[komik.judul]";
+    }
+
+    if (
+      !$this->validate([
+        "judul" => [
+          "rules" => $rules_judul,
+          "errors" => [
+            "required" => "{field} komik harus diisi.",
+            "is_unique" => "{field} komik sudah terdaftar",
+          ],
+        ],
+      ])
+    ) {
+      $validation = \Config\Services::validation();
+      return redirect()
+        ->to("/komik/edit/" . $this->request->getVar("slug"))
+        ->withInput()
+        ->with("validation", $validation);
+    }
+
+    $slug = url_title($_POST["judul"], "-", true);
+    $this->komikModel->save([
+      "id" => $id,
+      "judul" => $_POST["judul"],
+      "slug" => $slug,
+      "penulis" => $_POST["penulis"],
+      "penerbit" => $_POST["penerbit"],
+      "sampul" => $_POST["sampul"],
+    ]);
+
+    session()->setFlashData("pesan", "Data Berhasil Diubah.");
+
+    return redirect()->to("/komik");
+  }
 }
