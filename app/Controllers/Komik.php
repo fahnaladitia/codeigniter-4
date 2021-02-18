@@ -63,22 +63,45 @@ class Komik extends BaseController
             "is_unique" => "{field} komik sudah terdaftar",
           ],
         ],
+        "sampul" => [
+          "rules" =>
+            "max_size[sampul,1024]|is_image[sampul]|mime_in[sampul,image/jpg,image/jpeg,image/png]",
+          "errors" => [
+            "max_size" => "Ukuran maximal 1024KB",
+            "is_image" => "Yang anda pilih bukan gambar",
+            "mime_in" => "Yang anda pilih bukan gambar",
+          ],
+        ],
       ])
     ) {
-      $validation = \Config\Services::validation();
+      // $validation = \Config\Services::validation();
+      // return redirect()
+      //   ->to("/komik/create")
+      //   ->withInput()
+      //   ->with("validation", $validation);
       return redirect()
         ->to("/komik/create")
-        ->withInput()
-        ->with("validation", $validation);
+        ->withInput();
+    }
+    // ambil gambar
+    $fileSampul = $this->request->getFile("sampul");
+    // cek apakah tidak ada gambar yang diupload
+    if ($fileSampul->getError() == 4) {
+      $namaSampul = "default.jpg";
+    } else {
+      // generate nama sampul random
+      $namaSampul = $fileSampul->getRandomName();
+      // pindahkan file ke folder img
+      $fileSampul->move("img", $namaSampul);
     }
 
-    $slug = url_title($_POST["judul"], "-", true);
+    $slug = url_title($this->request->getVar("judul"), "-", true);
     $this->komikModel->save([
-      "judul" => $_POST["judul"],
+      "judul" => $this->request->getVar("judul"),
       "slug" => $slug,
-      "penulis" => $_POST["penulis"],
-      "penerbit" => $_POST["penerbit"],
-      "sampul" => $_POST["sampul"],
+      "penulis" => $this->request->getVar("penulis"),
+      "penerbit" => $this->request->getVar("penerbit"),
+      "sampul" => $namaSampul,
     ]);
 
     session()->setFlashData("pesan", "Data Berhasil Ditambahkan.");
@@ -88,6 +111,15 @@ class Komik extends BaseController
 
   public function delete($id)
   {
+    // cari gambar berdasarkan id
+    $komik = $this->komikModel->find($id);
+
+    // cek jika file gambarnya default.jpg
+    if ($komik["sampul"] != "default.jpg") {
+      // hapus gambar
+      unlink("img/" . $komik["sampul"]);
+    }
+
     $this->komikModel->delete($id);
     session()->setFlashData("pesan", "Data Berhasil Dihapus.");
     return redirect()->to("/komik");
@@ -122,23 +154,47 @@ class Komik extends BaseController
             "is_unique" => "{field} komik sudah terdaftar",
           ],
         ],
+        "sampul" => [
+          "rules" =>
+            "max_size[sampul,1024]|is_image[sampul]|mime_in[sampul,image/jpg,image/jpeg,image/png]",
+          "errors" => [
+            "max_size" => "Ukuran maximal 1024KB",
+            "is_image" => "Yang anda pilih bukan gambar",
+            "mime_in" => "Yang anda pilih bukan gambar",
+          ],
+        ],
       ])
     ) {
-      $validation = \Config\Services::validation();
+      // $validation = \Config\Services::validation();
       return redirect()
         ->to("/komik/edit/" . $this->request->getVar("slug"))
-        ->withInput()
-        ->with("validation", $validation);
+        ->withInput();
     }
 
-    $slug = url_title($_POST["judul"], "-", true);
+    $fileSampul = $this->request->getFile("sampul");
+
+    // cek gambar, apakah tetap gambar lama
+    if ($fileSampul->getError() == 4) {
+      $namaSampul = $this->request->getVar("sampulLama");
+    } else {
+      // generate nama file random
+      $namaSampul = $fileSampul->getRandomname();
+      // pindah gambar
+      $fileSampul->move("img", $namaSampul);
+      // hapus file yang lama
+      if ($this->request->getVar("sampulLama") != "default.jpg") {
+        unlink("img/" . $this->request->getVar("sampulLama"));
+      }
+    }
+
+    $slug = url_title($this->request->getVar("judul"), "-", true);
     $this->komikModel->save([
       "id" => $id,
-      "judul" => $_POST["judul"],
+      "judul" => $this->request->getVar("judul"),
       "slug" => $slug,
-      "penulis" => $_POST["penulis"],
-      "penerbit" => $_POST["penerbit"],
-      "sampul" => $_POST["sampul"],
+      "penulis" => $this->request->getVar("penulis"),
+      "penerbit" => $this->request->getVar("penerbit"),
+      "sampul" => $namaSampul,
     ]);
 
     session()->setFlashData("pesan", "Data Berhasil Diubah.");
